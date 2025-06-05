@@ -56,6 +56,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon)
 	bool bHasRifle;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Weapon)
+	int iAmmo;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Weapon)
+	int iHealthPack;
+
 	/** Setter to set the bool */
 	UFUNCTION(BlueprintCallable, Category = Weapon)
 	void SetHasRifle(bool bNewHasRifle);
