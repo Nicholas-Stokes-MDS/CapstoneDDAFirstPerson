@@ -15,6 +15,18 @@ ADDA::ADDA()
 void ADDA::BeginPlay()
 {
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Hello from C++!"));
+
+    UpdatePlayerStatus(60.f, 0, 1);
+    RecordEncounter(110.f);
+    RecordEncounter(90.f);
+    RecordEncounter(100.f);
+    RecordEncounter(120.f);
+
+    FString Msg = FString::Printf(TEXT("Shortfall Probability: %.2f%%"), HealthShortfallProbability * 100.0f);
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, Msg);
+
+    UE_LOG(LogTemp, Warning, TEXT("Raw shortfall prob: %.6f"), HealthShortfallProbability);
+
     Super::BeginPlay();
     
 }
