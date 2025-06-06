@@ -7,15 +7,55 @@
 ADDA::ADDA()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 }
 
 // Called when the game starts or when spawned
 void ADDA::BeginPlay()
 {
-	Super::BeginPlay();
-	
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Hello from C++!"));
+    Super::BeginPlay();
+    
+}
+
+void ADDA::RecalculateHealthShortfallProbability()
+{
+    if (EncounterHistory.Num() == 0)
+    {
+        HealthShortfallProbability = 0.0f;
+        return;
+    }
+
+    float Sum = 0.0f;
+    for (const FEncounterRecord& Rec : EncounterHistory)
+    {
+        Sum += Rec.DamageTaken;
+    }
+
+    float Mean = Sum / EncounterHistory.Num();
+
+    float Variance = 0.0f;
+    for (const FEncounterRecord& Rec : EncounterHistory)
+    {
+        float Diff = Rec.DamageTaken - Mean;
+        Variance += Diff * Diff;
+    }
+
+    float StdDev = FMath::Sqrt(Variance / EncounterHistory.Num());
+
+    // Calculate total heal from packs (capped at 100 HP max)
+    float PotentialHeal = HealthPacks * 40.0f;
+    float EffectiveHealth = FMath::Min(PlayerHealth + PotentialHeal, 100.0f);
+
+    if (StdDev <= KINDA_SMALL_NUMBER)
+    {
+        HealthShortfallProbability = (EffectiveHealth < Mean) ? 1.0f : 0.0f;
+        return;
+    }
+
+    float Z = (Mean - EffectiveHealth) / (StdDev * FMath::Sqrt(2.0f));
+    HealthShortfallProbability = 0.5f * (1.0f + std::erf(Z));
 }
 
 // Called every frame
@@ -25,55 +65,25 @@ void ADDA::Tick(float DeltaTime)
 
 }
 
-void ADDA::Initialize(ACapstoneFirstPersonCharacter* InPlayer)
+void ADDA::RecordEncounter(float DamageTaken)
 {
-	Player = InPlayer;
+	EncounterHistory.Add(FEncounterRecord(DamageTaken));
+	RecalculateHealthShortfallProbability();
 }
 
-void ADDA::RecordDamage(float DamageAmount)
+void ADDA::UpdatePlayerStatus(float NewHealth, int32 NewAmmo, int32 NewHealthPacks)
 {
-	if (DamageAmount <= 0.f)
-		return;
-
-	DamageHistory.Add(DamageAmount);
-
-	// Optional: Limit to last N entries
-	if (DamageHistory.Num() > 100)
-	{
-		DamageHistory.RemoveAt(0);
-	}
+	PlayerHealth = NewHealth;
+	PlayerAmmo = NewAmmo;
+	HealthPacks = NewHealthPacks;
 }
 
-
-
-void ADDA::GetDamageStats(float& OutMean, float& OutStdDev) const
+int32 ADDA::GetRecommendedHealthPacks()
 {
-	OutMean = 0.f;
-	OutStdDev = 0.f;
+    // Scale based on shortfall probability (0 to 1)
+    // You can tweak the max drop amount here
+    const int32 MaxPacksPerCrate = 3;
 
-	int32 Count = DamageHistory.Num();
-	if (Count == 0)
-		return;
-
-	// Mean
-	for (float Value : DamageHistory)
-	{
-		OutMean += Value;
-	}
-	OutMean /= Count;
-
-	// Standard deviation
-	float SumSqDiff = 0.f;
-	for (float Value : DamageHistory)
-	{
-		SumSqDiff += FMath::Square(Value - OutMean);
-	}
-	OutStdDev = FMath::Sqrt(SumSqDiff / Count);
-}
-
-// shows the probability that a value is less than or equal to x
-float ADDA::GaussianCDF(float x, float mean, float stdDev)
-{
-	float z = (x - mean) / (stdDev * FMath::Sqrt(2.0f));
-	return 0.5f * (1.0f + std::erf(z));
+    // Simple linear scaling
+    return FMath::Clamp(FMath::RoundToInt(HealthShortfallProbability * MaxPacksPerCrate), 0, MaxPacksPerCrate);
 }

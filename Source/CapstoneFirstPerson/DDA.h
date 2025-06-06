@@ -7,6 +7,18 @@
 #include <cmath>
 #include "DDA.generated.h"
 
+USTRUCT(BlueprintType)
+struct FEncounterRecord
+{
+	GENERATED_BODY()
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float DamageTaken = 0.0f;
+
+	FEncounterRecord() {}
+	FEncounterRecord(float InDamageTaken) : DamageTaken(InDamageTaken) {}
+};
+
 
 UCLASS()
 class CAPSTONEFIRSTPERSON_API ADDA : public AActor
@@ -22,26 +34,37 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY()
-	ACapstoneFirstPersonCharacter* Player;
-
-	UPROPERTY()
 	TArray<float> DamageHistory;
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<FEncounterRecord> EncounterHistory;
+
+	UPROPERTY(VisibleAnywhere)
+	float PlayerHealth = 100.0f;
+
+	UPROPERTY(VisibleAnywhere)
+	int32 PlayerAmmo = 0;
+
+	UPROPERTY(VisibleAnywhere)
+	int32 HealthPacks = 0;
+
+	void RecalculateHealthShortfallProbability();
+
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UFUNCTION(BlueprintCallable, Category = "Damage Tracking")
-	void Initialize(ACapstoneFirstPersonCharacter* InPlayer);
+	UFUNCTION(BlueprintCallable, Category = "DDA")
+	void RecordEncounter(float DamageTaken);
 
-	// Call this whenever the player takes damage
-	UFUNCTION(BlueprintCallable, Category = "Damage Tracking")
-	void RecordDamage(float DamageAmount);
+	UFUNCTION(BlueprintCallable, Category = "DDA")
+	void UpdatePlayerStatus(float NewHealth, int32 NewAmmo, int32 NewHealthPacks);
 
-	// Returns current mean and standard deviation
-	UFUNCTION(BlueprintCallable, Category = "Damage Tracking")
-	void GetDamageStats(float& OutMean, float& OutStdDev) const;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "DDA")
+	float HealthShortfallProbability;
 
-	UFUNCTION(BlueprintCallable, Category = "Damage Tracking")
-	float GaussianCDF(float x, float mean, float stdDev);
+	// How many health packs should the next crate contain
+	UFUNCTION(BlueprintCallable, Category = "DDA")
+	int32 GetRecommendedHealthPacks();
 };
