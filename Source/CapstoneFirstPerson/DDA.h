@@ -73,12 +73,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "DDA")
 	float HealthShortfallProbability;
 
-	// How many health packs should the next crate contain
 	UFUNCTION(BlueprintCallable, Category = "DDA")
 	int32 GetRecommendedHealthPacks();
 
+	UFUNCTION(BlueprintCallable, Category = "DDA")
+	void Recalculate();
 
-	// How many health packs should the next crate contain
 	UFUNCTION(BlueprintCallable, Category = "DDA")
 	int32 GetRecommendedAmmo();
 };

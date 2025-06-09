@@ -14,18 +14,9 @@ ADDA::ADDA()
 // Called when the game starts or when spawned
 void ADDA::BeginPlay()
 {
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Hello from C++!"));
 
-    //UpdatePlayerStatus(60.f, 0, 1);
-    //RecordEncounter(110.f);
-    //RecordEncounter(90.f);
-    //RecordEncounter(100.f);
-    //RecordEncounter(120.f);
-
-    //FString Msg = FString::Printf(TEXT("Shortfall Probability: %.2f%%"), HealthShortfallProbability * 100.0f);
-    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, Msg);
-
-    //UE_LOG(LogTemp, Warning, TEXT("Raw shortfall prob: %.6f"), HealthShortfallProbability);
+    // artificial value
+    RecordEncounter(30.f);
 
     Super::BeginPlay();
     
@@ -68,6 +59,10 @@ void ADDA::RecalculateHealthShortfallProbability()
 
     float Z = (Mean - EffectiveHealth) / (StdDev * FMath::Sqrt(2.0f));
     HealthShortfallProbability = 0.5f * (1.0f + std::erf(Z));
+
+    FString Msg = FString::Printf(TEXT("Shortfall Probability: %.2f%%"), HealthShortfallProbability * 100.0f);
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, Msg);
+
 }
 
 // Called every frame
@@ -98,30 +93,31 @@ void ADDA::UpdatePlayerStatus(float NewHealth, int32 NewAmmo, int32 NewHealthPac
 
 int32 ADDA::GetRecommendedHealthPacks()
 {
-    //// Scale based on shortfall probability (0 to 1)
-    //// You can tweak the max drop amount here
-    //const int32 MaxPacksPerCrate = 3;
+    if (EncounterHistory.Num() < 1)
+    {
+        return 1;
+    }
 
-    //// Simple linear scaling
-    //return FMath::Clamp(FMath::RoundToInt(HealthShortfallProbability * MaxPacksPerCrate), 0, MaxPacksPerCrate);
-
-    //FString Msg = FString::Printf(TEXT("Shortfall Probability: %.2f%%"), HealthShortfallProbability);
-    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, Msg);
-    
-    if (HealthShortfallProbability > 0.8f)
+    if (HealthShortfallProbability > 0.9f)
     {
         return 3;
     }
-    if (HealthShortfallProbability > 0.5f) 
+    if (HealthShortfallProbability > 0.6f) 
     {
         return 2;
     }
-    if (HealthShortfallProbability > 0.2f)
+    if (HealthShortfallProbability > 0.3f)
     {
         return 1;
     }
     return 0;
 }
+
+void ADDA::Recalculate()
+{
+    RecalculateHealthShortfallProbability();
+}
+
 
 int32 ADDA::GetRecommendedAmmo()
 {
