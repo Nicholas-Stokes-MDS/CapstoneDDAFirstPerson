@@ -16,16 +16,16 @@ void ADDA::BeginPlay()
 {
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Hello from C++!"));
 
-    UpdatePlayerStatus(60.f, 0, 1);
-    RecordEncounter(110.f);
-    RecordEncounter(90.f);
-    RecordEncounter(100.f);
-    RecordEncounter(120.f);
+    //UpdatePlayerStatus(60.f, 0, 1);
+    //RecordEncounter(110.f);
+    //RecordEncounter(90.f);
+    //RecordEncounter(100.f);
+    //RecordEncounter(120.f);
 
-    FString Msg = FString::Printf(TEXT("Shortfall Probability: %.2f%%"), HealthShortfallProbability * 100.0f);
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, Msg);
+    //FString Msg = FString::Printf(TEXT("Shortfall Probability: %.2f%%"), HealthShortfallProbability * 100.0f);
+    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, Msg);
 
-    UE_LOG(LogTemp, Warning, TEXT("Raw shortfall prob: %.6f"), HealthShortfallProbability);
+    //UE_LOG(LogTemp, Warning, TEXT("Raw shortfall prob: %.6f"), HealthShortfallProbability);
 
     Super::BeginPlay();
     
@@ -83,6 +83,12 @@ void ADDA::RecordEncounter(float DamageTaken)
 	RecalculateHealthShortfallProbability();
 }
 
+void ADDA::NumCratesEnemiesLeft(int32 Crates, int32 Enemies)
+{
+    CratesLeft = Crates;
+    EnemiesLeft = Enemies;
+}
+
 void ADDA::UpdatePlayerStatus(float NewHealth, int32 NewAmmo, int32 NewHealthPacks)
 {
 	PlayerHealth = NewHealth;
@@ -92,10 +98,34 @@ void ADDA::UpdatePlayerStatus(float NewHealth, int32 NewAmmo, int32 NewHealthPac
 
 int32 ADDA::GetRecommendedHealthPacks()
 {
-    // Scale based on shortfall probability (0 to 1)
-    // You can tweak the max drop amount here
-    const int32 MaxPacksPerCrate = 3;
+    //// Scale based on shortfall probability (0 to 1)
+    //// You can tweak the max drop amount here
+    //const int32 MaxPacksPerCrate = 3;
 
-    // Simple linear scaling
-    return FMath::Clamp(FMath::RoundToInt(HealthShortfallProbability * MaxPacksPerCrate), 0, MaxPacksPerCrate);
+    //// Simple linear scaling
+    //return FMath::Clamp(FMath::RoundToInt(HealthShortfallProbability * MaxPacksPerCrate), 0, MaxPacksPerCrate);
+
+    //FString Msg = FString::Printf(TEXT("Shortfall Probability: %.2f%%"), HealthShortfallProbability);
+    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, Msg);
+    
+    if (HealthShortfallProbability > 0.8f)
+    {
+        return 3;
+    }
+    if (HealthShortfallProbability > 0.5f) 
+    {
+        return 2;
+    }
+    if (HealthShortfallProbability > 0.2f)
+    {
+        return 1;
+    }
+    return 0;
+}
+
+int32 ADDA::GetRecommendedAmmo()
+{
+    float RecommendedAmmo = ((EnemiesLeft * 5) - PlayerAmmo + 2 ) / CratesLeft;
+    int32 RoundedUp = FMath::CeilToInt(RecommendedAmmo);
+    return RoundedUp;
 }

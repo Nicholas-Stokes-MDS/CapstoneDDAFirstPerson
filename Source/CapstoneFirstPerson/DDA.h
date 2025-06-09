@@ -46,6 +46,12 @@ protected:
 	int32 PlayerAmmo = 0;
 
 	UPROPERTY(VisibleAnywhere)
+	int32 CratesLeft = 0;
+
+	UPROPERTY(VisibleAnywhere)
+	int32 EnemiesLeft = 0;
+
+	UPROPERTY(VisibleAnywhere)
 	int32 HealthPacks = 0;
 
 	void RecalculateHealthShortfallProbability();
@@ -59,6 +65,9 @@ public:
 	void RecordEncounter(float DamageTaken);
 
 	UFUNCTION(BlueprintCallable, Category = "DDA")
+	void NumCratesEnemiesLeft(int32 Crates, int32 Enemies);
+
+	UFUNCTION(BlueprintCallable, Category = "DDA")
 	void UpdatePlayerStatus(float NewHealth, int32 NewAmmo, int32 NewHealthPacks);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "DDA")
@@ -67,4 +76,9 @@ public:
 	// How many health packs should the next crate contain
 	UFUNCTION(BlueprintCallable, Category = "DDA")
 	int32 GetRecommendedHealthPacks();
+
+
+	// How many health packs should the next crate contain
+	UFUNCTION(BlueprintCallable, Category = "DDA")
+	int32 GetRecommendedAmmo();
 };
